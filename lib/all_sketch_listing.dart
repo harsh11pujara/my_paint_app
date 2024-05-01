@@ -1,5 +1,8 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:my_paint_app/draw_sketch.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class AllSketchListing extends StatefulWidget {
   const AllSketchListing({Key? key}) : super(key: key);
@@ -8,8 +11,9 @@ class AllSketchListing extends StatefulWidget {
   State<AllSketchListing> createState() => _AllSketchListingState();
 }
 
+List<Map<String, String>> allSketches = [];
+
 class _AllSketchListingState extends State<AllSketchListing> {
-  List allSketches = [];
 
   @override
   void initState() {
@@ -19,6 +23,12 @@ class _AllSketchListingState extends State<AllSketchListing> {
 
   Future<void> getSketchesFromLocal() async {
     // Fetching sketch data from local DB
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    List<String>? localData = prefs.getStringList("allSketch");
+    debugPrint(localData.toString());
+    if (localData != null && localData.isNotEmpty) {
+      allSketches = localData.map((e) => jsonDecode(e) as Map<String, String>).toList();
+    }
   }
 
   @override
@@ -43,7 +53,17 @@ class _AllSketchListingState extends State<AllSketchListing> {
               itemCount: allSketches.length,
               shrinkWrap: true,
               itemBuilder: (context, index) {
-                return Container();
+                return ListTile(
+                  onTap: () {
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => DrawSketch(title: allSketches[index].keys.toList()[0], sketchData: allSketches[index].values.toList()[0]),
+                        ));
+                  },
+                  title: Text(allSketches[index].keys.toList()[0]),
+
+                );
               },
             )
           : const Center(

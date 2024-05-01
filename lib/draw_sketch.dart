@@ -1,9 +1,15 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:my_paint_app/all_sketch_listing.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 Map<int, List<Offset>?> linesMap = {};
 
 class DrawSketch extends StatefulWidget {
-  const DrawSketch({Key? key}) : super(key: key);
+  const DrawSketch({Key? key, this.title, this.sketchData}) : super(key: key);
+  final String? title;
+  final String? sketchData;
 
   @override
   State<DrawSketch> createState() => _DrawSketchState();
@@ -14,10 +20,78 @@ class _DrawSketchState extends State<DrawSketch> {
   List<Offset> line = [];
   double strokeWidth = 1;
   Color strokeColor = Colors.black;
+  TextEditingController sketchTitle = TextEditingController();
+
+  Future<void> saveSketchToLocal() async{
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    int index = 0;
+    bool containsThisSketch = allSketches.any((element) {
+      if(element.keys.contains(sketchTitle.text)){
+        return true;
+      } else {
+        return false;
+      }
+    });
+
+    if(containsThisSketch) {
+      index = allSketches.indexWhere((element) => element.keys.contains(sketchTitle.text));
+      allSketches[index] = {sketchTitle.text.toString() : convertOffsetMapToString(linesMap)};
+    } else {
+      allSketches.add({sketchTitle.text.toString() : convertOffsetMapToString(linesMap)});
+    }
+
+    await prefs.setStringList("allSketch", allSketches.map((e) => e.).toList());
+  }
+
+  String convertOffsetMapToString(Map<int, List<Offset>?> data) {
+    Map<String, List<String>?> convertData = {};
+    for(MapEntry<int, List<Offset>?> entries in data.entries){
+      convertData[entries.key.toString()] = entries.value?.map((offset) => '${offset.dx},${offset.dy}').toList();
+    }
+    debugPrint(convertData.toString());
+    return jsonEncode(convertData);
+  }
+
+  convertStringToLineOffset(String? lineOffset) {
+
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    sketchTitle.text = widget.title ?? "Untitled ${DateTime.now().day}/${DateTime.now().month} ${DateTime.now().hour}:${DateTime.now().minute}";
+    convertStringToLineOffset(widget.sketchData);
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      extendBodyBehindAppBar: true,
+      appBar: AppBar(
+        elevation: 0,
+        backgroundColor: Colors.white,
+        leadingWidth: 30,
+        automaticallyImplyLeading: true,
+        title: TextField(
+          style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+          controller: sketchTitle,
+          decoration: const InputDecoration(
+            border: UnderlineInputBorder(borderSide: BorderSide(color: Colors.black))
+          ),
+        ),
+        actions: [
+          TextButton(onPressed: () async {
+            // save sketch to local
+            if (linesMap.isNotEmpty) {
+              await saveSketchToLocal().then((value) {
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Saved!!"), duration: Duration(seconds: 1),));
+              });
+            } else {
+              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Canvas is Empty"), duration: Duration(seconds: 1),));
+            }
+          }, child: const Text("Save"))
+        ],
+      ),
       body: Stack(
         children: [
 
@@ -76,7 +150,7 @@ class _DrawSketchState extends State<DrawSketch> {
       floatingActionButton: Row(
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
-          FloatingActionButton.small(backgroundColor: Colors.purple[100],onPressed: () {
+          FloatingActionButton.small(heroTag: 'Undo',backgroundColor: Colors.purple[100],onPressed: () {
             setState(() {
               if (id > 0) {
                 id--;
@@ -87,7 +161,7 @@ class _DrawSketchState extends State<DrawSketch> {
               linesMap.removeWhere((key, value) => value == []);
             });
           },child: const Icon(Icons.undo_sharp, color: Colors.black54,)),
-          FloatingActionButton.small(backgroundColor: Colors.purple[100],onPressed: () {
+          FloatingActionButton.small(heroTag: 'Clear',backgroundColor: Colors.purple[100],onPressed: () {
             setState(() {
               linesMap.clear();
               id = 0;

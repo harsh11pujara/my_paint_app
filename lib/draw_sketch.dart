@@ -35,32 +35,66 @@ class _DrawSketchState extends State<DrawSketch> {
 
     if(containsThisSketch) {
       index = allSketches.indexWhere((element) => element.keys.contains(sketchTitle.text));
-      allSketches[index] = {sketchTitle.text.toString() : convertOffsetMapToString(linesMap)};
+      allSketches[index] = {sketchTitle.text.toString() : convertOffsetDataToString(linesMap)};
     } else {
-      allSketches.add({sketchTitle.text.toString() : convertOffsetMapToString(linesMap)});
+      allSketches.add({sketchTitle.text.toString() : convertOffsetDataToString(linesMap)});
     }
 
-    await prefs.setStringList("allSketch", allSketches.map((e) => e.).toList());
+
+    await prefs.setStringList("allSketch", allSketches.map((e) => jsonEncode(e)).toList());
   }
 
-  String convertOffsetMapToString(Map<int, List<Offset>?> data) {
+  String convertOffsetDataToString(Map<int, List<Offset>?> data) {
     Map<String, List<String>?> convertData = {};
     for(MapEntry<int, List<Offset>?> entries in data.entries){
       convertData[entries.key.toString()] = entries.value?.map((offset) => '${offset.dx},${offset.dy}').toList();
     }
-    debugPrint(convertData.toString());
-    return jsonEncode(convertData);
+    // debugPrint(convertData.toString());
+    return convertData.toString();
   }
 
-  convertStringToLineOffset(String? lineOffset) {
+  convertStringToLineOffset(String lineOffset) {
+    List<String> tempList = widget.sketchData!.split("],");
+    List<String> elementList = [];
 
+    //* Get each element of line in list form
+    for (String element in tempList) {
+      // debugPrint("start $element");
+      String tempString = element;
+      if(tempString.contains("{")) {
+        tempString = tempString.replaceAll("{", "");
+      }
+      if(tempString.contains("}")) {
+        tempString = tempString.replaceAll("}", "");
+      }
+      tempString = "$tempString]";
+      // debugPrint("end $tempString");
+      elementList.add(tempString);
+    }
+    // debugPrint(elementList.toString());
+    //* ends
+
+
+    //* assigning offset to lineMap and showing on canvas
+    for(String offsets in elementList){
+      int key = int.parse(offsets.split(":").first.toString().trim());
+      List<String> offsetList = offsets.split(":")[1].toString().trim().replaceAll('[', '')
+          .replaceAll(']', '').split(", ").toList();
+      linesMap[key] = offsetList.map((e) {
+        return Offset(double.parse(e.split(',')[0].toString()), double.parse(e.split(',')[1].toString()));
+      }).toList();
+    }
+    //* ends
+
+    id = linesMap.length;
+    setState(() {});
   }
 
   @override
   void initState() {
     super.initState();
-    sketchTitle.text = widget.title ?? "Untitled ${DateTime.now().day}/${DateTime.now().month} ${DateTime.now().hour}:${DateTime.now().minute}";
-    convertStringToLineOffset(widget.sketchData);
+    sketchTitle.text = widget.title ?? "Untitled ${DateTime.now().day}/${DateTime.now().month}/${DateTime.now().year.toString().substring(2)} ${DateTime.now().hour}:${DateTime.now().minute}:${DateTime.now().second}";
+    widget.sketchData != null ? convertStringToLineOffset(widget.sketchData!) : null;
   }
 
   @override
@@ -73,7 +107,7 @@ class _DrawSketchState extends State<DrawSketch> {
         leadingWidth: 30,
         automaticallyImplyLeading: true,
         title: TextField(
-          style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+          style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w500),
           controller: sketchTitle,
           decoration: const InputDecoration(
             border: UnderlineInputBorder(borderSide: BorderSide(color: Colors.black))
@@ -101,19 +135,18 @@ class _DrawSketchState extends State<DrawSketch> {
             width: MediaQuery.of(context).size.width,
             child: GestureDetector(
               onPanStart: (details) {
-                debugPrint('START ####  Global Pos ${details.globalPosition} - Local Pos ${details.localPosition} - Timestamp ${details.sourceTimeStamp} - Kind ${details.kind}');
+                // debugPrint('START ####  Global Pos ${details.globalPosition} - Local Pos ${details.localPosition} - Timestamp ${details.sourceTimeStamp} - Kind ${details.kind}');
                 setState(() {
                   line.add(details.globalPosition);
                 });
               },
               onPanUpdate: (details) {
-                debugPrint('UPDATE ### Global Pos ${details.globalPosition} - Local Pos ${details.localPosition} - Timestamp ${details.sourceTimeStamp} - Delta ${details.delta} - Primary Delta ${details.primaryDelta}');
+                // debugPrint('UPDATE ### Global Pos ${details.globalPosition} - Local Pos ${details.localPosition} - Timestamp ${details.sourceTimeStamp} - Delta ${details.delta} - Primary Delta ${details.primaryDelta}');
                 setState(() {
                   line.add(details.globalPosition);
                 });
               },
               onPanEnd: (details) {
-                debugPrint(details.primaryVelocity.toString());
                 id++;
                 line = [];
               },
@@ -156,7 +189,7 @@ class _DrawSketchState extends State<DrawSketch> {
                 id--;
                 linesMap.removeWhere((key, value) => key == id);
                 line = [];
-                debugPrint("id $id sketch $linesMap");
+                // debugPrint("id $id sketch $linesMap");
               }
               linesMap.removeWhere((key, value) => value == []);
             });
@@ -190,7 +223,7 @@ class MyPainter extends CustomPainter{
     // debugPrint("error3 $id $offsetList $linesMap");
 
     if((!linesMap.keys.contains(id)) && offsetList?.length != 0){
-      debugPrint("error $id $offsetList $linesMap");
+      // debugPrint("error $id $offsetList $linesMap");
       linesMap[id] = offsetList ?? [];
     }
     // debugPrint("error2 $id $offsetList $linesMap");

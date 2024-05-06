@@ -107,7 +107,7 @@ class _DrawSketchState extends State<DrawSketch> {
         leadingWidth: 30,
         automaticallyImplyLeading: true,
         title: TextField(
-          style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w500),
+          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600, fontFamily: "Montserrat"),
           controller: sketchTitle,
           decoration: const InputDecoration(
             border: UnderlineInputBorder(borderSide: BorderSide(color: Colors.black))
@@ -123,7 +123,7 @@ class _DrawSketchState extends State<DrawSketch> {
             } else {
               ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Canvas is Empty"), duration: Duration(seconds: 1),));
             }
-          }, child: const Text("Save"))
+          }, child: Text("Save", style: TextStyle(color: Colors.pinkAccent[100],fontFamily: "Montserrat", fontWeight: FontWeight.w600),))
         ],
       ),
       body: Stack(
@@ -165,7 +165,7 @@ class _DrawSketchState extends State<DrawSketch> {
               child: SizedBox(
                 width: 200,
                 child: Slider(
-                  thumbColor: Colors.purple[100],
+                  thumbColor: Colors.pinkAccent[100],
                   activeColor: Colors.black38,
                   value: strokeWidth,
                   onChanged: (value) {
@@ -183,7 +183,7 @@ class _DrawSketchState extends State<DrawSketch> {
       floatingActionButton: Row(
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
-          FloatingActionButton.small(heroTag: 'Undo',backgroundColor: Colors.purple[100],onPressed: () {
+          FloatingActionButton.small(heroTag: 'Undo',backgroundColor: Colors.pinkAccent[100],onPressed: () {
             setState(() {
               if (id > 0) {
                 id--;
@@ -194,7 +194,7 @@ class _DrawSketchState extends State<DrawSketch> {
               linesMap.removeWhere((key, value) => value == []);
             });
           },child: const Icon(Icons.undo_sharp, color: Colors.black54,)),
-          FloatingActionButton.small(heroTag: 'Clear',backgroundColor: Colors.purple[100],onPressed: () {
+          FloatingActionButton.small(heroTag: 'Clear',backgroundColor: Colors.pinkAccent[100],onPressed: () {
             setState(() {
               linesMap.clear();
               id = 0;

@@ -39,7 +39,7 @@ class _AllSketchListingState extends State<AllSketchListing> {
         backgroundColor: Colors.white,
         title: const Text(
           "Sketches",
-          style: TextStyle(fontSize: 22, fontWeight: FontWeight.w500),
+          style: TextStyle(fontSize: 22, fontWeight: FontWeight.w600, fontFamily: "Montserrat",),
         ),
       ),
       floatingActionButton: FloatingActionButton(
@@ -53,7 +53,7 @@ class _AllSketchListingState extends State<AllSketchListing> {
               await getSketchesFromLocal();
             });
           },
-          backgroundColor: Colors.purple[100],
+          backgroundColor: Colors.pinkAccent[100],
           child: const Icon(
             Icons.format_paint_sharp,
             color: Colors.black54,
@@ -76,17 +76,18 @@ class _AllSketchListingState extends State<AllSketchListing> {
                   },
                   child: Container(
                       width: double.infinity,
-                      margin: const EdgeInsets.symmetric(vertical: 5, horizontal: 15),
-                      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
+                      margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 15),
+                      padding: const EdgeInsets.only(top: 12, bottom: 10, left: 16),
                       decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(4),
                         color: Colors.grey[100],
                         boxShadow: [
-                          BoxShadow(color: Colors.purple[100]!, blurRadius: 5, offset: Offset(5,5))
+                          BoxShadow(color: Colors.grey[300]!, blurRadius: 2, spreadRadius: 1, offset: Offset(3,3))
                         ]
                       ),
                       child: Text(
                         allSketches[index].keys.toList()[0],
-                        style: const TextStyle(fontSize: 16),
+                        style: const TextStyle(fontSize: 16, fontFamily: "Montserrat", fontWeight: FontWeight.w500),
                       )),
                 );
               },
